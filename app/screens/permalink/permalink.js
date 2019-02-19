@@ -44,8 +44,7 @@ Animatable.initializeRegistryWithDefinitions({
 export default class Permalink extends PureComponent {
     static propTypes = {
         actions: PropTypes.shape({
-            getPostsAfter: PropTypes.func.isRequired,
-            getPostsBefore: PropTypes.func.isRequired,
+            getPostsAround: PropTypes.func.isRequired,
             getPostThread: PropTypes.func.isRequired,
             getChannel: PropTypes.func.isRequired,
             handleSelectChannel: PropTypes.func.isRequired,
@@ -307,10 +306,7 @@ export default class Permalink extends PureComponent {
             }
         }
 
-        await Promise.all([
-            actions.getPostsBefore(focusChannelId, focusedPostId, 0, 10),
-            actions.getPostsAfter(focusChannelId, focusedPostId, 0, 10),
-        ]);
+        await actions.getPostsAround(focusChannelId, focusedPostId, 10);
 
         if (this.mounted) {
             this.setState({loading: false});
