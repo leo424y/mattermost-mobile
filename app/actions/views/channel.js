@@ -14,7 +14,13 @@ import {
     markChannelAsViewed,
     selectChannel,
 } from 'mattermost-redux/actions/channels';
-import {getPosts, getPostsBefore, getPostsSince, getPostThread} from 'mattermost-redux/actions/posts';
+import {
+    getPosts,
+    getPostsAfter,
+    getPostsBefore,
+    getPostsSince,
+    getPostThread,
+} from 'mattermost-redux/actions/posts';
 import {getFilesForPost} from 'mattermost-redux/actions/files';
 import {savePreferences} from 'mattermost-redux/actions/preferences';
 import {getTeamMembersByIds} from 'mattermost-redux/actions/teams';
@@ -545,31 +551,32 @@ export function setChannelDisplayName(displayName) {
 }
 
 // Returns true if there are more posts to load
-export function increasePostVisibility(channelId, focusedPostId, direction = ListTypes.VISIBILITY_SCROLL_UP) {
+export function increasePostVisibility(channelId, postId, direction = ListTypes.VISIBILITY_SCROLL_UP) {
     return async (dispatch, getState) => {
         const state = getState();
-        const {loadingPosts, postVisibility} = state.views.channel;
-        const currentPostVisibility = postVisibility[channelId] || 0;
+        const {loadingPosts/*, postVisibility*/} = state.views.channel;
+        // const currentPostVisibility = postVisibility[channelId] || 0;
 
         if (loadingPosts[channelId]) {
             return true;
         }
 
-        // Check if we already have the posts that we want to show
-        if (!focusedPostId) {
-            const loadedPostCount = state.views.channel.postCountInChannel[channelId] || 0;
-            const desiredPostVisibility = currentPostVisibility + ViewTypes.POST_VISIBILITY_CHUNK_SIZE;
+        // TODO Fix this logic for bi-directional scrolling
+        // // Check if we already have the posts that we want to show
+        // if (!postId) {
+        //     const loadedPostCount = state.views.channel.postCountInChannel[channelId] || 0;
+        //     const desiredPostVisibility = currentPostVisibility + ViewTypes.POST_VISIBILITY_CHUNK_SIZE;
 
-            if (loadedPostCount >= desiredPostVisibility) {
-                // We already have the posts, so we just need to show them
-                dispatch(batchActions([
-                    doIncreasePostVisibility(channelId),
-                    setLoadMorePostsVisible(true),
-                ]));
+        //     if (loadedPostCount >= desiredPostVisibility) {
+        //         // We already have the posts, so we just need to show them
+        //         dispatch(batchActions([
+        //             doIncreasePostVisibility(channelId),
+        //             setLoadMorePostsVisible(true),
+        //         ]));
 
-                return true;
-            }
-        }
+        //         return true;
+        //     }
+        // }
 
         dispatch({
             type: ViewTypes.LOADING_POSTS,
@@ -578,16 +585,18 @@ export function increasePostVisibility(channelId, focusedPostId, direction = Lis
         });
 
         const pageSize = ViewTypes.POST_VISIBILITY_CHUNK_SIZE;
-        const page = Math.floor(currentPostVisibility / pageSize);
 
         let result;
-        if (focusedPostId) {
-            result = await retryGetPostsAction(getPostsBefore(channelId, focusedPostId, page, pageSize), dispatch, getState);
-        } else if (direction === ListTypes.VISIBILITY_SCROLL_DOWN) {
-            const lastPostId = state.entities.posts.postsInChannel[channelId][0];
-            result = await retryGetPostsAction(getPostsBefore(channelId, lastPostId, page, pageSize), dispatch, getState);
-        } else {
-            result = await retryGetPostsAction(getPosts(channelId, page, pageSize), dispatch, getState);
+        try {
+            if (direction === ListTypes.VISIBILITY_SCROLL_DOWN) {
+                // Scrolling down to load newer posts
+                result = await retryGetPostsAction(getPostsAfter(channelId, postId, 0, pageSize), dispatch, getState);
+            } else {
+                // Scrolling up to load older posts
+                result = await retryGetPostsAction(getPostsBefore(channelId, postId, 0, pageSize), dispatch, getState);
+            }
+        } catch (e) {
+            return false;
         }
 
         const actions = [{

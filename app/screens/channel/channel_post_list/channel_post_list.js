@@ -53,6 +53,9 @@ export default class ChannelPostList extends PureComponent {
         };
 
         this.contentHeight = 0;
+
+        this.isLoadingMoreBottom = false;
+        this.isLoadingMoreTop = false;
     }
 
     componentWillReceiveProps(nextProps) {
@@ -110,23 +113,26 @@ export default class ChannelPostList extends PureComponent {
         }
     };
 
-    loadMorePostsTop = async () => {
+    loadMorePostsTop = () => {
         const {actions, channelId} = this.props;
         if (!this.isLoadingMoreTop) {
             this.isLoadingMoreTop = true;
-            actions.increasePostVisibility(channelId).then((hasMore) => {
+            actions.increasePostVisibility(
+                channelId,
+                this.state.visiblePostIds[this.state.visiblePostIds.length - 1]
+            ).then((hasMore) => {
                 this.isLoadingMoreTop = !hasMore;
             });
         }
     };
 
-    loadMorePostsBottom = async () => {
+    loadMorePostsBottom = () => {
         const {actions, channelId} = this.props;
         if (!this.isLoadingMoreBottom) {
             this.isLoadingMoreBottom = true;
             actions.increasePostVisibility(
                 channelId,
-                null,
+                this.state.visiblePostIds[0],
                 ListTypes.VISIBILITY_SCROLL_DOWN,
             ).then((hasMore) => {
                 this.isLoadingMoreBottom = !hasMore;
