@@ -87,7 +87,7 @@ export default class ChannelPostList extends PureComponent {
         const {actions, channelId, navigator, theme} = this.props;
         const rootId = (post.root_id || post.id);
 
-        actions.loadThreadIfNecessary(post.root_id, channelId);
+        actions.loadThreadIfNecessary(post.root_id);
         actions.selectPost(rootId);
 
         const options = {

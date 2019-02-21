@@ -27,6 +27,7 @@ import {getTeamMembersByIds} from 'mattermost-redux/actions/teams';
 import {getProfilesInChannel} from 'mattermost-redux/actions/users';
 import {General, Preferences} from 'mattermost-redux/constants';
 import {getCurrentChannelId, getMyChannelMember} from 'mattermost-redux/selectors/entities/channels';
+import {getRecentPostIds} from 'mattermost-redux/selectors/entities/posts';
 import {getCurrentTeamId, getTeamByName} from 'mattermost-redux/selectors/entities/teams';
 
 import {
@@ -166,8 +167,8 @@ export function loadProfilesAndTeamMembersForDMSidebar(teamId) {
 export function loadPostsIfNecessaryWithRetry(channelId) {
     return async (dispatch, getState) => {
         const state = getState();
-        const {posts, postsInChannel} = state.entities.posts;
-        const postsIds = postsInChannel[channelId];
+        const {posts} = state.entities.posts;
+        const postsIds = getRecentPostIds(state, channelId);
         const actions = [];
 
         const time = Date.now();
@@ -260,14 +261,14 @@ export function loadFilesForPostIfNecessary(postId) {
     };
 }
 
-export function loadThreadIfNecessary(rootId, channelId) {
-    return async (dispatch, getState) => {
+export function loadThreadIfNecessary(rootId) {
+    return (dispatch, getState) => {
         const state = getState();
-        const {posts, postsInChannel} = state.entities.posts;
-        const channelPosts = postsInChannel[channelId];
+        const {posts, postsInThread} = state.entities.posts;
+        const threadPosts = postsInThread[rootId];
 
-        if (rootId && (!posts[rootId] || !channelPosts || !channelPosts[rootId])) {
-            getPostThread(rootId, false)(dispatch, getState);
+        if (!posts[rootId] || !threadPosts) {
+            dispatch(getPostThread(rootId));
         }
     };
 }

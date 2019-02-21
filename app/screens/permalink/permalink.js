@@ -166,7 +166,7 @@ export default class Permalink extends PureComponent {
         const channelId = post.channel_id;
         const rootId = (post.root_id || post.id);
 
-        actions.loadThreadIfNecessary(rootId, channelId);
+        actions.loadThreadIfNecessary(rootId);
         actions.selectPost(rootId);
 
         const options = {
