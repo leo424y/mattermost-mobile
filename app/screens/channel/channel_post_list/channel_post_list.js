@@ -42,6 +42,7 @@ export default class ChannelPostList extends PureComponent {
     };
 
     static defaultProps = {
+        postIds: [],
         postVisibility: ViewTypes.POST_VISIBILITY_CHUNK_SIZE,
     };
 
