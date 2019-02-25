@@ -35,7 +35,7 @@ export default class ChannelPostList extends PureComponent {
         lastViewedAt: PropTypes.number,
         loadMorePostsVisible: PropTypes.bool.isRequired,
         navigator: PropTypes.object,
-        postIds: PropTypes.array.isRequired,
+        postIds: PropTypes.array,
         postVisibility: PropTypes.number,
         refreshing: PropTypes.bool.isRequired,
         theme: PropTypes.object.isRequired,
@@ -81,7 +81,7 @@ export default class ChannelPostList extends PureComponent {
     }
 
     getVisiblePostIds = (props) => {
-        return props.postIds.slice(0, props.postVisibility);
+        return props.postIds ? props.postIds.slice(0, props.postVisibility) : [];
     };
 
     goToThread = (post) => {
@@ -186,7 +186,6 @@ export default class ChannelPostList extends PureComponent {
             lastViewedAt,
             loadMorePostsVisible,
             navigator,
-            postIds,
             refreshing,
             theme,
         } = this.props;
@@ -194,7 +193,7 @@ export default class ChannelPostList extends PureComponent {
         const {visiblePostIds} = this.state;
         let component;
 
-        if (!postIds.length && channelRefreshingFailed) {
+        if (visiblePostIds.length === 0 && channelRefreshingFailed) {
             component = (
                 <PostListRetry
                     retry={this.loadPostsRetry}
