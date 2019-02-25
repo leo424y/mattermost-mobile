@@ -27,7 +27,7 @@ import {getTeamMembersByIds} from 'mattermost-redux/actions/teams';
 import {getProfilesInChannel} from 'mattermost-redux/actions/users';
 import {General, Preferences} from 'mattermost-redux/constants';
 import {getCurrentChannelId, getMyChannelMember} from 'mattermost-redux/selectors/entities/channels';
-import {getRecentPostIds} from 'mattermost-redux/selectors/entities/posts';
+import {getPostIdsInChannel} from 'mattermost-redux/selectors/entities/posts';
 import {getCurrentTeamId, getTeamByName} from 'mattermost-redux/selectors/entities/teams';
 
 import {
@@ -168,7 +168,7 @@ export function loadPostsIfNecessaryWithRetry(channelId) {
     return async (dispatch, getState) => {
         const state = getState();
         const {posts} = state.entities.posts;
-        const postsIds = getRecentPostIds(state, channelId);
+        const postsIds = getPostIdsInChannel(state, channelId);
         const actions = [];
 
         const time = Date.now();
@@ -555,10 +555,17 @@ export function setChannelDisplayName(displayName) {
 export function increasePostVisibility(channelId, postId, direction = ListTypes.VISIBILITY_SCROLL_UP) {
     return async (dispatch, getState) => {
         const state = getState();
-        const {loadingPosts/*, postVisibility*/} = state.views.channel;
+        const {loadingPosts} = state.views.channel;
+
+        // const {postVisibility} = state.views.channel;
         // const currentPostVisibility = postVisibility[channelId] || 0;
 
         if (loadingPosts[channelId]) {
+            return true;
+        }
+
+        if (!postId) {
+            // No posts are visible, so the channel is empty
             return true;
         }
 
